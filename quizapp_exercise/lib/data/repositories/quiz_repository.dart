@@ -109,19 +109,11 @@ class QuizRepository {
           ], 
           goodChoice: "Ronan",
           ),
-           Question(
-          title: "who is the best teacher", 
-          choices: [
-              "Ronan",
-              "Hongly",
-              "Leangsiv",
-          ], 
-          goodChoice: "Ronan",
-          ),
+
         Question(
-          title: "What is the capital of Japan?",
-          choices: ["Tokyo", "Seoul", "Kyoto", "Beijing"],
-          goodChoice: "Tokyo",
+          title: "What is the capital of france?",
+          choices: ["Tokyo", "Seoul", "Paris", "London"],
+          goodChoice: "Paris",
         ),
         Question(
           title: "Which planet is known as the Red Planet?",
@@ -137,11 +129,6 @@ class QuizRepository {
           title: "What is the freezing point of water?",
           choices: ["0°C", "100°C", "50°C", "-10°C"],
           goodChoice: "0°C",
-        ),
-        Question(
-          title: "Which continent is the largest?",
-          choices: ["Africa", "Asia", "North America", "Europe"],
-          goodChoice: "Asia",
         ),
         Question(
           title: "What is the capital of cambodia",
