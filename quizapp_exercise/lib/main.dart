@@ -1,30 +1,17 @@
-
 import 'package:flutter/material.dart';
 import 'data/repositories/quiz_repository.dart';
 import 'domain/models/quiz.dart';
-import 'domain/models/quiz_result.dart';
 import 'domain/models/answer.dart';
 import 'ui/screens/start_screen.dart';
-import 'ui/screens/question_screen.dart';
+import 'ui/screens/quiz_screen.dart';
 import 'ui/screens/result_screen.dart';
-import 'ui/screens/history_screen.dart';
 
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-
-  final repository = QuizRepository();
-
-  //  Delete old JSON file (so new questions always load)
-  await repository.resetQuizData();
-
-  //  Create new JSON file with updated questions
-  await repository.initializeQuizData();
-
-  runApp(const MyApp());
+void main() {
+  runApp(const QuizApp());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class QuizApp extends StatelessWidget {
+  const QuizApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -34,177 +21,75 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
         useMaterial3: true,
       ),
-      home: const MyHomePage(),
+      home: const QuizHome(),
       debugShowCheckedModeBanner: false,
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key});
+class QuizHome extends StatefulWidget {
+  const QuizHome({super.key});
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  State<QuizHome> createState() => _QuizHomeState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  late QuizRepository _repository;
-  late Quiz _quiz;
-  late List<QuizResult> _history;
-  bool _isLoading = true;
-  String _currentScreen = 'home'; // home, quiz, result, history
+class _QuizHomeState extends State<QuizHome> {
+
+  String currentScreen = 'start';
+  late Quiz quiz;
 
   @override
   void initState() {
     super.initState();
-    _repository = QuizRepository();
-    _loadQuizData();
+    quiz = Quiz(questions: quizQuestions);
   }
 
-  Future<void> _loadQuizData() async {
-    try {
-      final quiz = await _repository.loadQuiz();
-      final history = await _repository.loadQuizHistory();
-
-      setState(() {
-        _quiz = quiz;
-        _history = history;
-        _isLoading = false;
-      });
-    } catch (e) {
-      print('Error loading quiz data: $e');
-      setState(() {
-        _isLoading = false;
-      });
-    }
-  }
-
-  void _startQuiz() {
-    // Reset answers on start
-    _quiz = Quiz(questions: _quiz.questions, answers: []);
-
+  void startQuiz() {
     setState(() {
-      _currentScreen = 'quiz';
+      quiz.clearAnswers();
+      currentScreen = 'quiz';
     });
   }
 
-  void _quizCompleted() async {
-    final score = _quiz.getScore();
-    final questionResults = <QuestionResult>[];
-
-    for (int i = 0; i < _quiz.questions.length; i++) {
-      final question = _quiz.questions[i];
-      final answer = _quiz.answers[i];
-
-      questionResults.add(
-        QuestionResult(
-          question: question.title,
-          userAnswer: answer.answerChoice,
-          correctAnswer: answer.goodChoice,
-          isCorrect: answer.isCorrect(),
-        ),
-      );
-    }
-
-    final result = QuizResult(
-      score: score,
-      totalQuestions: _quiz.questions.length,
-      timestamp: DateTime.now(),
-      questionResults: questionResults,
-    );
-
-    await _repository.saveQuizResult(result);
-
-    final history = await _repository.loadQuizHistory();
-
+  void finishQuiz() {
     setState(() {
-      _history = history;
-      _currentScreen = 'result';
+      currentScreen = 'result';
     });
   }
 
-  void _retakeQuiz() {
-    _startQuiz();
-  }
-
-  void _backToHome() {
+  void goHome() {
     setState(() {
-      _currentScreen = 'home';
+      currentScreen = 'start';
     });
   }
 
-  void _viewHistory() {
-    setState(() {
-      _currentScreen = 'history';
-    });
+  void addAnswer(Answer answer) {
+    quiz.addAnswer(answer);
+  }
+
+  void removeLastAnswer() {
+    quiz.removeLastAnswer();
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) {
-      return Scaffold(
-        body: Center(
-          child: CircularProgressIndicator(color: Colors.blue),
-        ),
-      );
-    }
-
-    switch (_currentScreen) {
-      case 'home':
-        return StartScreen(
-          onStartQuiz: _startQuiz,
-          onViewHistory: _viewHistory,
-        );
-
+    switch (currentScreen) {
       case 'quiz':
-        return QuestionScreen(
-          quiz: _quiz,
-          onQuizComplete: _quizCompleted,
+        return QuizScreen(
+          quiz: quiz,
+          onFinish: finishQuiz,
+          onAddAnswer: addAnswer,
+          onRemoveAnswer: removeLastAnswer,
         );
-
       case 'result':
-        final score = _quiz.getScore();
-        final questionResults = <QuestionResult>[];
-
-        for (int i = 0; i < _quiz.questions.length; i++) {
-          final question = _quiz.questions[i];
-          final answer = _quiz.answers[i];
-
-          questionResults.add(
-            QuestionResult(
-              question: question.title,
-              userAnswer: answer.answerChoice,
-              correctAnswer: answer.goodChoice,
-              isCorrect: answer.isCorrect(),
-            ),
-          );
-        }
-
-        final result = QuizResult(
-          score: score,
-          totalQuestions: _quiz.questions.length,
-          timestamp: DateTime.now(),
-          questionResults: questionResults,
-        );
-
         return ResultScreen(
-          quiz: _quiz,
-          quizResult: result,
-          onRetakeQuiz: _retakeQuiz,
-          onBackToHome: _backToHome,
+          quiz: quiz,
+          onRetake: startQuiz,
+          onHome: goHome,
         );
-
-      case 'history':
-        return HistoryScreen(
-          history: _history,
-          onBackToHome: _backToHome,
-        );
-
       default:
-        return StartScreen(
-          onStartQuiz: _startQuiz,
-          onViewHistory: _viewHistory,
-        );
+        return StartScreen(onStart: startQuiz);
     }
   }
 }

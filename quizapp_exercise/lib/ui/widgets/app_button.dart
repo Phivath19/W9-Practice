@@ -1,41 +1,34 @@
 import 'package:flutter/material.dart';
 
+
 class AppButton extends StatelessWidget {
-  final String label;
+  final String text;
   final VoidCallback onPressed;
-  final Color? backgroundColor;
-  final Color? textColor;
-  final double? width;
+  final Color color;
 
   const AppButton({
-    Key? key,
-    required this.label,
+    super.key,
+    required this.text,
     required this.onPressed,
-    this.backgroundColor,
-    this.textColor,
-    this.width,
-  }) : super(key: key);
+    this.color = Colors.blue,
+  });
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: width,
+      width: double.infinity,
       child: ElevatedButton(
+        onPressed: onPressed,
         style: ElevatedButton.styleFrom(
-          backgroundColor: backgroundColor ?? Colors.blue,
+          backgroundColor: color,
           padding: const EdgeInsets.symmetric(vertical: 16),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(8),
           ),
         ),
-        onPressed: onPressed,
         child: Text(
-          label,
-          style: TextStyle(
-            color: textColor ?? Colors.white,
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-          ),
+          text,
+          style: const TextStyle(color: Colors.white, fontSize: 16),
         ),
       ),
     );
